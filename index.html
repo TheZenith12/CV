@@ -294,6 +294,57 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:'Pr
 .hint{text-align:center;font-size:clamp(.38rem,1.2vw,.5rem);color:#555;margin-top:.9rem;image-rendering:auto}
 
 @media(max-width:480px){.btn-row .mc-btn{font-size:.38rem}}
+
+/* ===================== HEALTH BAR ===================== */
+.health-bar{
+  position:absolute;top:clamp(30px,5vh,50px);left:50%;transform:translateX(-50%);
+  z-index:10;display:flex;gap:2px
+}
+.heart{font-size:clamp(.8rem,2.8vw,1.2rem);filter:drop-shadow(1px 1px 0 #000);animation:hbeat 1.6s ease-in-out infinite}
+.heart:nth-child(2){animation-delay:.15s}.heart:nth-child(3){animation-delay:.3s}
+.heart:nth-child(4){animation-delay:.45s}.heart:nth-child(5){animation-delay:.6s}
+@keyframes hbeat{0%,100%{transform:scale(1)}50%{transform:scale(1.2)}}
+
+/* ===================== COORDS ===================== */
+.coords{
+  position:absolute;top:clamp(8px,2vh,18px);left:.8%;z-index:10;
+  font-size:clamp(.2rem,.5vw,.32rem);color:rgba(255,255,255,.75);
+  text-shadow:1px 1px #000;line-height:2.2;pointer-events:none
+}
+
+/* ===================== DAY/NIGHT ===================== */
+#daynight{position:absolute;inset:0;z-index:1;pointer-events:none;transition:background 60s linear}
+
+/* ===================== ACHIEVEMENT ===================== */
+#achievement{
+  position:fixed;top:clamp(10px,3vh,24px);right:-420px;z-index:500;
+  background:#1a1a1a;
+  border-top:3px solid #c6c6c6;border-left:3px solid #c6c6c6;
+  border-right:3px solid #373737;border-bottom:3px solid #373737;
+  padding:.6rem .9rem;display:flex;align-items:center;gap:.7rem;
+  transition:right .45s cubic-bezier(.2,.8,.3,1);min-width:220px;max-width:290px
+}
+#achievement.show{right:clamp(8px,2vw,16px)}
+.ach-icon{font-size:1.6rem;flex-shrink:0}
+.ach-lbl{font-size:.28rem;color:#ffcc00;text-shadow:1px 1px #000;letter-spacing:.1em}
+.ach-name{font-size:.36rem;color:#fff;margin-top:.28rem;text-shadow:1px 1px #000}
+
+/* ===================== CREEPER ===================== */
+#creeper-ov{
+  display:none;position:fixed;inset:0;z-index:990;
+  background:rgba(0,0,0,.85);
+  align-items:center;justify-content:center;flex-direction:column
+}
+#creeper-ov.show{display:flex}
+.creeper-face{font-size:clamp(5rem,18vw,9rem);animation:creepIn .5s cubic-bezier(.2,1.4,.4,1)}
+@keyframes creepIn{from{transform:scale(0) rotate(-15deg)}to{transform:scale(1) rotate(0deg)}}
+.creeper-txt{
+  font-size:clamp(.4rem,1.6vw,.75rem);color:#4caf50;
+  text-shadow:2px 2px #000;margin-top:.8rem;animation:blink .45s step-end infinite
+}
+@keyframes blink{50%{opacity:0}}
+.creeper-sub{font-size:clamp(.28rem,1vw,.45rem);color:#888;margin-top:.4rem;text-shadow:1px 1px #000}
+#boom{position:fixed;inset:0;background:#7fff40;z-index:1000;opacity:0;pointer-events:none;transition:opacity .04s}
 </style>
 </head>
 <body>
@@ -315,12 +366,28 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:'Pr
   <!-- background image -->
   <div class="bg-img"></div>
 
+  <!-- day/night overlay -->
+  <div id="daynight"></div>
+
   <!-- darkening overlays -->
   <div class="bg-fade"></div>
   <div class="vignette"></div>
 
   <!-- floating particles -->
   <div id="particles"></div>
+
+  <!-- health bar -->
+  <div class="health-bar">
+    <span class="heart">❤️</span><span class="heart">❤️</span><span class="heart">❤️</span>
+    <span class="heart">❤️</span><span class="heart">❤️</span>
+  </div>
+
+  <!-- coordinates -->
+  <div class="coords" id="coords">
+    X: <span id="cx">128</span><br>
+    Y: <span id="cy">64</span><br>
+    Z: <span id="cz">256</span>
+  </div>
 
   <!-- subtitle under image title -->
   <div class="sub-title">
@@ -344,6 +411,22 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:'Pr
   <div class="corner l">Minecraft Dev Portfolio 1.21</div>
   <div class="corner r">⛏ IT Edition</div>
 
+</div>
+
+<!-- ACHIEVEMENT TOAST -->
+<div id="achievement">
+  <div class="ach-icon">🏆</div>
+  <div><div class="ach-lbl">ACHIEVEMENT UNLOCKED</div><div class="ach-name" id="ach-name">—</div></div>
+</div>
+
+<!-- BOOM FLASH -->
+<div id="boom"></div>
+
+<!-- CREEPER OVERLAY -->
+<div id="creeper-ov">
+  <div class="creeper-face">🟩</div>
+  <div class="creeper-txt">SSSSssss...</div>
+  <div class="creeper-sub">[ Дарж хаах ]</div>
 </div>
 
 <!-- ===================== PANELS ===================== -->
@@ -535,12 +618,81 @@ function startParticles(){
   setInterval(spawnOrb,600);
 }
 
+// ---- Sound (Web Audio API) ----
+let actx=null;
+function getACtx(){if(!actx)actx=new(window.AudioContext||window.webkitAudioContext)();return actx;}
+function playClick(){
+  try{const c=getACtx(),o=c.createOscillator(),g=c.createGain();
+  o.connect(g);g.connect(c.destination);
+  o.frequency.setValueAtTime(900,c.currentTime);
+  o.frequency.exponentialRampToValueAtTime(450,c.currentTime+.06);
+  g.gain.setValueAtTime(.25,c.currentTime);
+  g.gain.exponentialRampToValueAtTime(.001,c.currentTime+.09);
+  o.start();o.stop(c.currentTime+.09);}catch(e){}
+}
+function playOpen(){
+  try{const c=getACtx();
+  [380,520,680].forEach((f,i)=>{
+    const o=c.createOscillator(),g=c.createGain();
+    o.connect(g);g.connect(c.destination);
+    o.frequency.value=f;const t=c.currentTime+i*.08;
+    g.gain.setValueAtTime(.18,t);g.gain.exponentialRampToValueAtTime(.001,t+.13);
+    o.start(t);o.stop(t+.13);
+  });}catch(e){}
+}
+function playXP(){
+  try{const c=getACtx();
+  [700,900,1100,1500].forEach((f,i)=>{
+    const o=c.createOscillator(),g=c.createGain();
+    o.connect(g);g.connect(c.destination);
+    o.frequency.value=f;const t=c.currentTime+i*.07;
+    g.gain.setValueAtTime(.12,t);g.gain.exponentialRampToValueAtTime(.001,t+.11);
+    o.start(t);o.stop(t+.11);
+  });}catch(e){}
+}
+function playCreeper(){
+  try{const c=getACtx();
+  const o=c.createOscillator(),g=c.createGain();
+  o.connect(g);g.connect(c.destination);
+  o.type='sawtooth';
+  o.frequency.setValueAtTime(180,c.currentTime);
+  o.frequency.exponentialRampToValueAtTime(60,c.currentTime+.6);
+  g.gain.setValueAtTime(.4,c.currentTime);
+  g.gain.exponentialRampToValueAtTime(.001,c.currentTime+.6);
+  o.start();o.stop(c.currentTime+.6);}catch(e){}
+}
+
+// ---- Achievement ----
+const achievements={
+  cv:'📜 CV Уншлаа!',
+  projects:'💻 Төслүүд нээлээ',
+  contact:'📡 Холбогдохыг оролдлоо',
+  skills:'⚙️ Чадваруудыг харлаа',
+  exp:'⚔️ Туршлагыг нээлээ'
+};
+let achTimer=null;
+function showAchievement(id){
+  const el=document.getElementById('achievement');
+  document.getElementById('ach-name').textContent=achievements[id]||'???';
+  el.classList.add('show');
+  clearTimeout(achTimer);
+  achTimer=setTimeout(()=>el.classList.remove('show'),3200);
+}
+
 // ---- Panels ----
 function openPanel(id){
+  playOpen();
   document.getElementById('ov-'+id).classList.add('open');
-  if(id==='skills') setTimeout(()=>document.querySelectorAll('.xpf').forEach(el=>el.style.width=el.dataset.p+'%'),80);
+  if(id==='skills'){
+    setTimeout(()=>{
+      document.querySelectorAll('.xpf').forEach(el=>el.style.width=el.dataset.p+'%');
+      playXP();
+    },80);
+  }
+  showAchievement(id);
 }
 function closePanel(id){
+  playClick();
   document.getElementById('ov-'+id).classList.remove('open');
   if(id==='skills') document.querySelectorAll('.xpf').forEach(el=>el.style.width='0%');
 }
@@ -549,6 +701,60 @@ document.querySelectorAll('.overlay').forEach(ov=>{
 });
 document.addEventListener('keydown',e=>{
   if(e.key==='Escape') document.querySelectorAll('.overlay.open').forEach(ov=>closePanel(ov.id.replace('ov-','')));
+});
+
+// ---- Button click sounds ----
+document.querySelectorAll('.mc-btn').forEach(b=>b.addEventListener('mousedown',playClick));
+
+// ---- Day/Night cycle ----
+function updateDayNight(){
+  const h=new Date().getHours();
+  const dn=document.getElementById('daynight');
+  let bg='transparent';
+  if(h>=6&&h<9){const t=(h-6+(new Date().getMinutes()/60))/3;bg=`rgba(255,180,80,${(.35*(1-t)).toFixed(2)})`;}
+  else if(h>=9&&h<18){bg='transparent';}
+  else if(h>=18&&h<21){const t=(h-18+(new Date().getMinutes()/60))/3;bg=`rgba(10,10,60,${(.6*t).toFixed(2)})`;}
+  else{bg='rgba(10,10,60,.6)';}
+  dn.style.background=bg;
+}
+updateDayNight();
+setInterval(updateDayNight,60000);
+
+// ---- Coordinates ----
+function animCoords(){
+  const cx=document.getElementById('cx'),cy=document.getElementById('cy'),cz=document.getElementById('cz');
+  let x=128,y=64,z=256;
+  setInterval(()=>{
+    x+=Math.round((Math.random()-.5)*3);
+    y+=Math.round((Math.random()-.48)*2);
+    z+=Math.round((Math.random()-.5)*3);
+    cx.textContent=x;cy.textContent=Math.max(1,Math.min(255,y));cz.textContent=z;
+  },1200);
+}
+animCoords();
+
+// ---- Konami / Creeper Easter Egg ----
+const KONAMI=['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];
+let kSeq=[];
+document.addEventListener('keydown',e=>{
+  kSeq.push(e.key);
+  if(kSeq.length>KONAMI.length)kSeq.shift();
+  if(kSeq.join(',')===KONAMI.join(',')){
+    kSeq=[];triggerCreeper();
+  }
+});
+function triggerCreeper(){
+  playCreeper();
+  const ov=document.getElementById('creeper-ov');
+  ov.classList.add('show');
+  setTimeout(()=>{
+    const boom=document.getElementById('boom');
+    boom.style.opacity='1';
+    setTimeout(()=>{boom.style.opacity='0';ov.classList.remove('show');},180);
+  },2200);
+}
+document.getElementById('creeper-ov').addEventListener('click',()=>{
+  document.getElementById('creeper-ov').classList.remove('show');
 });
 </script>
 </body>
