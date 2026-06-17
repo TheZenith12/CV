@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ч. Наранбаяр — Full Stack Developer</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;image-rendering:pixelated}
+html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:'Press Start 2P',monospace}
+
+/* ===================== LOADING ===================== */
+#loading{
+  position:fixed;inset:0;z-index:999;
+  background:#1a1a1a
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32'%3E%3Crect width='16' height='16' fill='%23222'/%3E%3Crect x='16' width='16' height='16' fill='%231e1e1e'/%3E%3Crect y='16' width='16' height='16' fill='%231e1e1e'/%3E%3Crect x='16' y='16' width='16' height='16' fill='%23222'/%3E%3C/svg%3E");
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  transition:opacity .6s
+}
+.load-logo{
+  font-size:clamp(1rem,5vw,2.2rem);color:#fff;
+  text-shadow:3px 3px 0 #555,4px 4px 0 #000;
+  margin-bottom:.4rem;letter-spacing:.04em;text-align:center
+}
+.load-logo .y{color:#ffe08a;text-shadow:3px 3px 0 #8b6a00,4px 4px 0 #000}
+.load-sub{font-size:clamp(.3rem,.95vw,.5rem);color:#888;margin-bottom:2.5rem;letter-spacing:.18em}
+.lb{width:min(300px,82vw)}
+.lb-lbl{font-size:.4rem;color:#aaa;margin-bottom:.5rem}
+.lb-track{
+  height:20px;background:#000;
+  border-top:3px solid #373737;border-left:3px solid #373737;
+  border-right:3px solid #c6c6c6;border-bottom:3px solid #c6c6c6;
+  padding:2px
+}
+.lb-fill{
+  height:100%;width:0%;
+  background:linear-gradient(to bottom,#9be84e 0 40%,#5aab2e 40%);
+  position:relative
+}
+.lb-fill::after{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:rgba(255,255,255,.25)}
+.lb-pct{font-size:.38rem;color:#777;margin-top:.5rem;text-align:right}
+
+/* ===================== WORLD ===================== */
+#world{
+  position:fixed;inset:0;display:none;opacity:0;transition:opacity .8s;
+  background:#000
+}
+
+/* BG IMAGE */
+.bg-img{
+  position:absolute;inset:0;z-index:0;
+  background:url('bg.jpg') top center/100% auto no-repeat,
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32'%3E%3Crect width='16' height='16' fill='%23696969'/%3E%3Crect x='16' width='16' height='16' fill='%235a5a5a'/%3E%3Crect y='16' width='16' height='16' fill='%235a5a5a'/%3E%3Crect x='16' y='16' width='16' height='16' fill='%23696969'/%3E%3C/svg%3E") repeat;
+  background-color:#4a4a4a;
+  image-rendering:auto;
+  animation:bgFloat 10s ease-in-out infinite alternate
+}
+@keyframes bgFloat{
+  from{transform:scale(1)}
+  to{transform:scale(1.03)}
+}
+
+/* darken bottom for buttons */
+.bg-fade{
+  position:absolute;inset:0;z-index:1;pointer-events:none;
+  background:
+    linear-gradient(to top, rgba(0,0,0,.72) 0%, rgba(0,0,0,.45) 28%, transparent 55%),
+    linear-gradient(to bottom, rgba(0,0,0,.15) 0%, transparent 20%)
+}
+
+/* vignette */
+.vignette{
+  position:absolute;inset:0;z-index:1;pointer-events:none;
+  background:radial-gradient(140% 90% at 50% 50%,transparent 40%,rgba(0,0,0,.35) 80%,rgba(0,0,0,.6) 100%)
+}
+
+/* ===================== SUBTITLE ===================== */
+.sub-title{
+  position:absolute;top:clamp(6px,1.8vh,18px);left:50%;transform:translateX(-50%);
+  z-index:10;text-align:center;white-space:nowrap
+}
+.sub-title .role{
+  font-size:clamp(.22rem,.65vw,.38rem);
+  color:#ffe08a;letter-spacing:.14em;
+  text-shadow:1px 1px 0 #000,1px 1px 0 #8b6a00;
+  background:rgba(0,0,0,.6);padding:.22rem .6rem;
+  border:2px solid rgba(255,200,80,.35)
+}
+
+/* ===================== FLOATING PARTICLES ===================== */
+#particles{position:absolute;inset:0;z-index:2;pointer-events:none;overflow:hidden}
+.orb{
+  position:absolute;
+  border-radius:0;
+  animation:floatUp linear infinite;
+  image-rendering:pixelated
+}
+/* XP orb (green square) */
+.orb.xp{
+  width:6px;height:6px;
+  background:#80ff20;
+  box-shadow:0 0 6px 2px rgba(128,255,32,.8),0 0 12px 4px rgba(128,255,32,.4)
+}
+/* spark (yellow) */
+.orb.sp{
+  width:4px;height:4px;
+  background:#ffcc00;
+  box-shadow:0 0 4px 2px rgba(255,200,0,.8)
+}
+/* star (white) */
+.orb.st{
+  width:3px;height:3px;
+  background:#fff;
+  box-shadow:0 0 4px 1px rgba(255,255,255,.9)
+}
+@keyframes floatUp{
+  0%{opacity:0;transform:translateY(0) translateX(0)}
+  10%{opacity:1}
+  90%{opacity:.8}
+  100%{opacity:0;transform:translateY(var(--rise,-250px)) translateX(var(--sway,20px))}
+}
+
+/* ===================== MENU BUTTONS ===================== */
+.menu{
+  position:absolute;
+  top:50%;
+  left:50%;transform:translate(-50%,-20%);
+  z-index:10;
+  width:min(460px,88vw);
+  display:flex;flex-direction:column;gap:6px
+}
+
+.tech-bar{
+  text-align:center;padding:.32rem .6rem;margin-bottom:6px;
+  background:rgba(0,0,0,.7);
+  border:2px solid rgba(255,200,80,.5);
+  box-shadow:0 0 12px rgba(255,180,50,.2)
+}
+.tech-bar span{
+  font-size:clamp(.28rem,.95vw,.48rem);
+  color:#ffd060;text-shadow:1px 1px #000;letter-spacing:.09em
+}
+.tech-bar .acc{color:#7ee0ff}
+
+.mc-btn{
+  display:flex;align-items:center;gap:.7rem;
+  padding:.65rem 1rem;
+  cursor:pointer;border:none;
+  font-family:'Press Start 2P',monospace;
+  font-size:clamp(.45rem,1.4vw,.7rem);
+  color:#fff;text-shadow:2px 2px 0 #1a1a1a;
+  text-align:left;width:100%;
+  /* Solid Minecraft stone button — matches the game exactly */
+  background:#8e8e8e;
+  border-top:3px solid #c6c6c6;
+  border-left:3px solid #c6c6c6;
+  border-right:3px solid #373737;
+  border-bottom:3px solid #373737;
+  position:relative;overflow:hidden;
+  transition:filter .06s,transform .05s
+}
+/* pixel scanline */
+.mc-btn::before{
+  content:'';position:absolute;inset:0;
+  background:repeating-linear-gradient(0deg,
+    rgba(0,0,0,.07) 0 2px,transparent 2px 4px);
+  pointer-events:none
+}
+/* shine sweep on hover */
+.mc-btn::after{
+  content:'';position:absolute;
+  top:0;left:-120%;width:60%;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.22),transparent);
+  transition:left .3s;pointer-events:none
+}
+.mc-btn:hover{
+  filter:brightness(1.28);
+  background:#9e9e9e;
+  border-top-color:#ddd;border-left-color:#ddd
+}
+.mc-btn:hover::after{left:130%}
+.mc-btn:active{
+  background:#7a7a7a;
+  border-top-color:#373737;border-left-color:#373737;
+  border-right-color:#c6c6c6;border-bottom-color:#c6c6c6;
+  transform:translateY(2px);filter:brightness(.88)
+}
+.bicon{
+  font-size:1.05rem;min-width:1.3rem;text-align:center;
+  filter:drop-shadow(1px 1px 0 #000);
+  transition:transform .12s
+}
+.mc-btn:hover .bicon{transform:scale(1.18)}
+
+.btn-row{display:flex;gap:6px}
+.btn-row .mc-btn{flex:1;font-size:clamp(.38rem,1.1vw,.58rem)}
+
+/* corner version */
+.corner{
+  position:absolute;bottom:clamp(6px,1.5vh,14px);z-index:9;
+  font-size:clamp(.22rem,.6vw,.36rem);
+  color:rgba(255,255,255,.45);text-shadow:1px 1px #000
+}
+.corner.l{left:.8%}.corner.r{right:.8%}
+
+/* ===================== OVERLAYS ===================== */
+.overlay{
+  display:none;position:fixed;inset:0;
+  background:rgba(0,0,0,.82);z-index:200;
+  align-items:center;justify-content:center;padding:1rem;
+  backdrop-filter:blur(3px)
+}
+.overlay.open{display:flex;animation:fade .15s}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+
+.panel{
+  background:#c6c6c6;
+  border-top:4px solid #fff;border-left:4px solid #fff;
+  border-right:4px solid #373737;border-bottom:4px solid #373737;
+  padding:1.2rem 1.2rem 1.6rem;
+  width:min(700px,98vw);max-height:88vh;overflow-y:auto;
+  animation:pop .15s ease;
+  scrollbar-width:thin;scrollbar-color:#555 #aaa;
+  image-rendering:auto
+}
+.panel::-webkit-scrollbar{width:9px}
+.panel::-webkit-scrollbar-track{background:#aaa}
+.panel::-webkit-scrollbar-thumb{background:#555}
+@keyframes pop{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+
+.ph{display:flex;align-items:center;justify-content:space-between;
+  border-bottom:3px solid #555;padding-bottom:.65rem;margin-bottom:1rem;gap:.5rem}
+.pt{font-size:clamp(.6rem,2vw,.88rem);color:#222;text-shadow:1px 1px #fff;image-rendering:auto}
+.px{
+  background:#8e8e8e;border:none;cursor:pointer;
+  font-family:'Press Start 2P',monospace;font-size:.46rem;color:#fff;padding:.38rem .55rem;
+  text-shadow:1px 1px #333;
+  border-top:2px solid #c6c6c6;border-left:2px solid #c6c6c6;
+  border-right:2px solid #373737;border-bottom:2px solid #373737;flex-shrink:0
+}
+.px:hover{filter:brightness(1.2)}
+.px:active{border-top-color:#373737;border-left-color:#373737;border-right-color:#c6c6c6;border-bottom-color:#c6c6c6}
+
+.sec{
+  font-size:clamp(.48rem,1.6vw,.62rem);color:#fff;
+  background:#555;padding:.35rem .6rem;
+  margin:.9rem 0 .5rem;border-left:5px solid #333;display:block;
+  text-shadow:1px 1px #000;image-rendering:auto
+}
+.card{
+  background:#b8b8b8;
+  border-top:2px solid #d0d0d0;border-left:2px solid #d0d0d0;
+  border-right:2px solid #444;border-bottom:2px solid #444;
+  padding:.6rem .8rem;margin-bottom:.4rem;image-rendering:auto
+}
+.ct{font-size:clamp(.5rem,1.8vw,.65rem);color:#1a1a1a;margin-bottom:.3rem;image-rendering:auto}
+.cs{font-size:clamp(.44rem,1.5vw,.58rem);color:#3a3a3a;line-height:2.2;image-rendering:auto}
+.pxd{height:3px;background:repeating-linear-gradient(90deg,#555 0 4px,transparent 4px 8px);margin:.75rem 0}
+
+/* CV top */
+.cvtop{display:flex;gap:1rem;align-items:flex-start;margin-bottom:.9rem;flex-wrap:wrap}
+.pfr{
+  width:88px;height:88px;flex-shrink:0;overflow:hidden;background:#777;
+  border-top:3px solid #d0d0d0;border-left:3px solid #d0d0d0;
+  border-right:3px solid #444;border-bottom:3px solid #444;position:relative
+}
+.pfr img{width:100%;height:100%;object-fit:cover;display:block;image-rendering:auto}
+.lvl{position:absolute;bottom:0;right:0;background:#3d8c1e;color:#fff;font-size:.28rem;padding:.16rem .28rem;border:2px solid #245a10}
+.cvi h2{font-size:clamp(.7rem,2.2vw,1.1rem);color:#1a1a1a;margin-bottom:.35rem;image-rendering:auto}
+.roletag{display:inline-block;background:#2e1d0d;color:#7ee0ff;font-size:clamp(.38rem,1.2vw,.52rem);padding:.25rem .5rem;margin-bottom:.5rem}
+.cvi p{font-size:clamp(.42rem,1.4vw,.56rem);color:#3a3a3a;line-height:2.2;image-rendering:auto}
+.chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:.35rem}
+.chip{background:#2e1d0d;color:#9be84e;font-size:clamp(.38rem,1.2vw,.5rem);padding:.28rem .5rem;border:2px solid #1a1108;text-shadow:1px 1px #000;image-rendering:auto}
+
+/* contact */
+.ccard{display:flex;align-items:center;gap:.7rem;background:#b8b8b8;border-top:2px solid #d0d0d0;border-left:2px solid #d0d0d0;border-right:2px solid #444;border-bottom:2px solid #444;padding:.6rem .82rem;margin-bottom:.42rem;text-decoration:none;transition:background .1s}
+.ccard:hover{background:#aac89a}
+.cci{font-size:.95rem;min-width:1.3rem;text-align:center}
+.ccl{font-size:clamp(.38rem,1.2vw,.5rem);color:#555;image-rendering:auto}
+.ccv{font-size:clamp(.44rem,1.5vw,.58rem);color:#1a1a1a;margin-top:.18rem;word-break:break-all;image-rendering:auto}
+
+/* skills */
+.skr{margin-bottom:.58rem}
+.skn{font-size:clamp(.42rem,1.4vw,.56rem);color:#1a1a1a;margin-bottom:.26rem;display:flex;justify-content:space-between;image-rendering:auto}
+.skn .pc{color:#245a10}
+.xpt{height:14px;background:#333;border-top:2px solid #222;border-left:2px solid #222;border-right:2px solid #666;border-bottom:2px solid #666;padding:1px}
+.xpf{height:100%;width:0%;transition:width 1.1s cubic-bezier(.2,.7,.3,1);position:relative;background:linear-gradient(to bottom,#9be84e 0 40%,#5aab2e 40%)}
+.xpf::after{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:rgba(255,255,255,.25)}
+
+/* about */
+.astat{display:flex;align-items:flex-start;gap:.65rem;padding:.55rem .78rem;background:#b8b8b8;border-top:2px solid #d0d0d0;border-left:2px solid #d0d0d0;border-right:2px solid #444;border-bottom:2px solid #444;margin-bottom:.4rem}
+.ai{font-size:.95rem;min-width:1.2rem;text-align:center}
+.at{font-size:clamp(.42rem,1.4vw,.56rem);color:#1a1a1a;line-height:2.2;image-rendering:auto}
+.hint{text-align:center;font-size:clamp(.38rem,1.2vw,.5rem);color:#555;margin-top:.9rem;image-rendering:auto}
+
+@media(max-width:480px){.btn-row .mc-btn{font-size:.38rem}}
+</style>
+</head>
+<body>
+
+<!-- ===================== LOADING ===================== -->
+<div id="loading">
+  <div class="load-logo">Ч. НАРАН<span class="y">БАЯР</span></div>
+  <div class="load-sub">FULL STACK DEVELOPER</div>
+  <div class="lb">
+    <div class="lb-lbl" id="lmsg">Дэлхийг ачааллаж байна...</div>
+    <div class="lb-track"><div class="lb-fill" id="lbar"></div></div>
+    <div class="lb-pct" id="lpct">0%</div>
+  </div>
+</div>
+
+<!-- ===================== WORLD ===================== -->
+<div id="world">
+
+  <!-- background image -->
+  <div class="bg-img"></div>
+
+  <!-- darkening overlays -->
+  <div class="bg-fade"></div>
+  <div class="vignette"></div>
+
+  <!-- floating particles -->
+  <div id="particles"></div>
+
+  <!-- subtitle under image title -->
+  <div class="sub-title">
+    <div class="role">◆ FULL STACK DEVELOPER ◆</div>
+  </div>
+
+  <!-- ===== MENU ===== -->
+  <div class="menu">
+    <div class="tech-bar">
+      <span><span class="acc">▸</span> REACT · NEXT.JS · NODE.JS · NESTJS · MONGODB <span class="acc">◂</span></span>
+    </div>
+    <button class="mc-btn" onclick="openPanel('cv')"><span class="bicon">📜</span> CV Унших</button>
+    <button class="mc-btn" onclick="openPanel('projects')"><span class="bicon">💻</span> Төслүүд</button>
+    <button class="mc-btn" onclick="openPanel('contact')"><span class="bicon">📡</span> Холбоо Барих</button>
+    <div class="btn-row">
+      <button class="mc-btn" onclick="openPanel('skills')"><span class="bicon">⚙️</span> Чадварууд</button>
+      <button class="mc-btn" onclick="openPanel('exp')"><span class="bicon">⚔️</span> Туршлага</button>
+    </div>
+  </div>
+
+  <div class="corner l">Minecraft Dev Portfolio 1.21</div>
+  <div class="corner r">⛏ IT Edition</div>
+
+</div>
+
+<!-- ===================== PANELS ===================== -->
+
+<!-- CV -->
+<div class="overlay" id="ov-cv"><div class="panel">
+  <div class="ph"><span class="pt">📜 CV — Ч. Наранбаяр</span><button class="px" onclick="closePanel('cv')">✕ Хаах</button></div>
+  <div class="cvtop">
+    <div class="pfr">
+      <img src="profile.jpg" alt="Ч. Наранбаяр" onerror="this.style.display='none'">
+      <span class="lvl">LVL 99</span>
+    </div>
+    <div class="cvi">
+      <h2>Ч. НАРАНБАЯР</h2>
+      <span class="roletag">&lt;/&gt; Full Stack Developer</span>
+      <p>Backend талдаа хүчтэй. NestJS, Next.js, MongoDB, PostgreSQL ашиглан production-д гарсан бодит апп бүтээсэн. Цэвэр код, найдвартай систем бүтээхэд анхаардаг.</p>
+    </div>
+  </div>
+  <div class="pxd"></div>
+  <span class="sec">⚡ ЕРӨНХИЙ МЭДЭЭЛЭЛ</span>
+  <div class="card"><div class="ct">Мэргэжил</div><div class="cs">Full Stack Developer — Backend-д хүчтэй</div></div>
+  <div class="card"><div class="ct">Туршлага</div><div class="cs">1+ жил · Ойрын 2–3 жил тогтвортой ажиллах хүсэлтэй</div></div>
+  <div class="card"><div class="ct">Байршил</div><div class="cs">Улаанбаатар, Монгол улс 🇲🇳 · Remote боломжтой</div></div>
+  <div class="card"><div class="ct">Хэл мэдлэг</div><div class="cs">🇲🇳 Монгол (төрөлх) · 🇬🇧 Англи (ажлын түвшинд)</div></div>
+  <div class="card"><div class="ct">Статус</div><div class="cs" style="color:#245a10">● Шинэ боломжид нээлттэй — идэвхтэй хайж байна</div></div>
+  <span class="sec">🛠️ ТЕХНОЛОГИЙН СТЕК</span>
+  <div class="card"><div class="chips">
+    <span class="chip">React</span><span class="chip">Next.js 14</span><span class="chip">JavaScript</span>
+    <span class="chip">Node.js</span><span class="chip">NestJS</span><span class="chip">Express</span>
+    <span class="chip">MongoDB</span><span class="chip">PostgreSQL</span><span class="chip">Prisma</span>
+    <span class="chip">Socket.io</span><span class="chip">Redis</span><span class="chip">TailwindCSS</span>
+    <span class="chip">NextAuth</span><span class="chip">Stripe/QPay</span><span class="chip">Git</span>
+  </div></div>
+  <span class="sec">📡 ХОЛБОО БАРИХ</span>
+  <div class="card"><div class="cs">📱 8655-1346 · ✉️ zenitht35@gmail.com · 🐙 github.com/TheZenith12</div></div>
+  <p class="hint">▸ "Төслүүд" цэснээс live ажиллаж буй ажлуудыг үзнэ үү</p>
+</div></div>
+
+<!-- PROJECTS -->
+<div class="overlay" id="ov-projects"><div class="panel">
+  <div class="ph"><span class="pt">💻 Төслүүд</span><button class="px" onclick="closePanel('projects')">✕ Хаах</button></div>
+  <div class="card" style="border-left:4px solid #245a10">
+    <div class="cs" style="color:#245a10">● Production · Live →
+      <a href="https://mongolia-resorts.vercel.app/" target="_blank" style="color:#245a10"> mongolia-resorts</a> ·
+      <a href="https://zenith-plum-omega.vercel.app/" target="_blank" style="color:#245a10"> zenith</a> ·
+      <a href="https://tracker-eosin-eta.vercel.app/" target="_blank" style="color:#245a10"> finance-tracker</a>
+    </div>
+  </div>
+  <div class="card">
+    <div class="ct">anime-platform/</div>
+    <div class="cs">Anime community + game платформ · Real-time chat, WebSocket мэдэгдэл</div>
+    <div class="chips" style="margin-top:.4rem"><span class="chip">NestJS</span><span class="chip">Prisma</span><span class="chip">Next.js 14</span><span class="chip">Socket.io</span><span class="chip">Redis</span><span class="chip">Tailwind</span></div>
+  </div>
+  <div class="card">
+    <div class="ct">finance-tracker/ <a href="https://tracker-eosin-eta.vercel.app/" target="_blank" style="color:#245a10;font-size:.38rem">live ↗</a></div>
+    <div class="cs">AI-тэй хувийн санхүүгийн хянах апп · Орлого/зарлага, төсөв, AI зөвлөгөө</div>
+    <div class="chips" style="margin-top:.4rem"><span class="chip">NestJS</span><span class="chip">MongoDB</span><span class="chip">React</span><span class="chip">Anthropic AI</span></div>
+  </div>
+  <div class="card">
+    <div class="ct">mongolia-resorts/ <a href="https://mongolia-resorts.vercel.app/" target="_blank" style="color:#245a10;font-size:.38rem">live ↗</a></div>
+    <div class="cs">Амралт, аялалын газрын каталог + захиалгын платформ · Admin, төлбөр</div>
+    <div class="chips" style="margin-top:.4rem"><span class="chip">Next.js 14</span><span class="chip">MongoDB</span><span class="chip">NextAuth</span><span class="chip">Cloudinary</span><span class="chip">Stripe/QPay</span></div>
+  </div>
+  <div class="card">
+    <div class="ct">smc-platform/</div>
+    <div class="cs">Chart дүн шинжилгээний платформ · Интерактив график, тайлан</div>
+    <div class="chips" style="margin-top:.4rem"><span class="chip">Next.js</span><span class="chip">PostgreSQL</span><span class="chip">Express</span><span class="chip">Recharts</span></div>
+  </div>
+  <div class="card">
+    <div class="ct">zenith/ <a href="https://zenith-plum-omega.vercel.app/" target="_blank" style="color:#245a10;font-size:.38rem">live ↗</a></div>
+    <div class="cs">Төсөл/таск удирдлагын dashboard · Нэвтрэлт, төлбөр, admin, аналитик</div>
+    <div class="chips" style="margin-top:.4rem"><span class="chip">Next.js</span><span class="chip">Prisma</span><span class="chip">NextAuth</span><span class="chip">Recharts</span><span class="chip">Tailwind</span></div>
+  </div>
+  <p class="hint">▸ <a href="https://github.com/TheZenith12" target="_blank" style="color:#245a10">github.com/TheZenith12</a></p>
+</div></div>
+
+<!-- CONTACT -->
+<div class="overlay" id="ov-contact"><div class="panel">
+  <div class="ph"><span class="pt">📡 Холбоо Барих</span><button class="px" onclick="closePanel('contact')">✕ Хаах</button></div>
+  <a class="ccard" href="tel:+97686551346"><span class="cci">📱</span><div><div class="ccl">УТАС</div><div class="ccv">8655-1346</div></div></a>
+  <a class="ccard" href="mailto:zenitht35@gmail.com"><span class="cci">✉️</span><div><div class="ccl">ИМЭЙЛ</div><div class="ccv">zenitht35@gmail.com</div></div></a>
+  <a class="ccard" href="https://github.com/TheZenith12" target="_blank"><span class="cci">🐙</span><div><div class="ccl">GITHUB</div><div class="ccv">github.com/TheZenith12</div></div></a>
+  <div class="ccard"><span class="cci">🌐</span><div><div class="ccl">БОЛОМЖТОЙ ЦАГ</div><div class="ccv">Ажлын өдрүүд · 09:00–18:00</div></div></div>
+  <div class="ccard"><span class="cci">💬</span><div><div class="ccl">ХАРИУ ӨГӨХ</div><div class="ccv">24 цагийн дотор</div></div></div>
+  <div class="ccard"><span class="cci">📍</span><div><div class="ccl">БАЙРШИЛ</div><div class="ccv">Улаанбаатар · Remote боломжтой</div></div></div>
+</div></div>
+
+<!-- SKILLS -->
+<div class="overlay" id="ov-skills"><div class="panel">
+  <div class="ph"><span class="pt">⚙️ Чадварууд — XP Level</span><button class="px" onclick="closePanel('skills')">✕ Хаах</button></div>
+  <span class="sec">🖥️ FRONTEND</span>
+  <div class="skr"><div class="skn"><span>React.js</span><span class="pc">90%</span></div><div class="xpt"><div class="xpf" data-p="90"></div></div></div>
+  <div class="skr"><div class="skn"><span>Next.js 14</span><span class="pc">88%</span></div><div class="xpt"><div class="xpf" data-p="88"></div></div></div>
+  <div class="skr"><div class="skn"><span>JavaScript / TypeScript</span><span class="pc">88%</span></div><div class="xpt"><div class="xpf" data-p="88"></div></div></div>
+  <div class="skr"><div class="skn"><span>HTML5 / CSS3 / Tailwind</span><span class="pc">90%</span></div><div class="xpt"><div class="xpf" data-p="90"></div></div></div>
+  <span class="sec">⚙️ BACKEND</span>
+  <div class="skr"><div class="skn"><span>Node.js</span><span class="pc">88%</span></div><div class="xpt"><div class="xpf" data-p="88"></div></div></div>
+  <div class="skr"><div class="skn"><span>NestJS</span><span class="pc">82%</span></div><div class="xpt"><div class="xpf" data-p="82"></div></div></div>
+  <div class="skr"><div class="skn"><span>Express / REST API</span><span class="pc">85%</span></div><div class="xpt"><div class="xpf" data-p="85"></div></div></div>
+  <div class="skr"><div class="skn"><span>Socket.io / Real-time</span><span class="pc">78%</span></div><div class="xpt"><div class="xpf" data-p="78"></div></div></div>
+  <span class="sec">🗄️ ӨГӨГДЛИЙН САН</span>
+  <div class="skr"><div class="skn"><span>MongoDB</span><span class="pc">85%</span></div><div class="xpt"><div class="xpf" data-p="85"></div></div></div>
+  <div class="skr"><div class="skn"><span>PostgreSQL</span><span class="pc">78%</span></div><div class="xpt"><div class="xpf" data-p="78"></div></div></div>
+  <div class="skr"><div class="skn"><span>Prisma ORM</span><span class="pc">80%</span></div><div class="xpt"><div class="xpf" data-p="80"></div></div></div>
+  <div class="skr"><div class="skn"><span>Redis</span><span class="pc">72%</span></div><div class="xpt"><div class="xpf" data-p="72"></div></div></div>
+  <span class="sec">🔧 ХЭРЭГСЭЛ</span>
+  <div class="skr"><div class="skn"><span>Git / GitHub</span><span class="pc">88%</span></div><div class="xpt"><div class="xpf" data-p="88"></div></div></div>
+  <div class="skr"><div class="skn"><span>Англи хэл</span><span class="pc">75%</span></div><div class="xpt"><div class="xpf" data-p="75"></div></div></div>
+</div></div>
+
+<!-- EXPERIENCE -->
+<div class="overlay" id="ov-exp"><div class="panel">
+  <div class="ph"><span class="pt">⚔️ Туршлага &amp; Боловсрол</span><button class="px" onclick="closePanel('exp')">✕ Хаах</button></div>
+  <span class="sec">💼 git log — АЖЛЫН ТУРШЛАГА</span>
+  <div class="card">
+    <div class="ct" style="color:#7a5010">a3f9c1d · 2025 — одоо · 1+ жил</div>
+    <div class="cs">feat: Backend &amp; Full-Stack гүнзгийрүүлэлт<br>
+    ▸ NestJS, Prisma, PostgreSQL — enterprise backend<br>
+    ▸ Socket.io + Redis — real-time систем<br>
+    ▸ Anthropic AI SDK интеграц<br>
+    ▸ Stripe / QPay төлбөрийн систем<br>
+    ▸ Vercel — 3 production deployment</div>
+  </div>
+  <div class="card">
+    <div class="ct" style="color:#7a5010">7b2e480 · 2024–2025</div>
+    <div class="cs">build: Full Stack Developer — бодит төслүүд<br>
+    ▸ Next.js 14, Node.js, MongoDB<br>
+    ▸ NextAuth, Cloudinary, REST API</div>
+  </div>
+  <div class="card">
+    <div class="ct" style="color:#7a5010">1c0aa92 · 2024</div>
+    <div class="cs">init: Self-Taught — суралцаж эхэлсэн<br>
+    ▸ JavaScript, React, Node.js бие даан эзэмшсэн</div>
+  </div>
+  <span class="sec">🎓 БОЛОВСРОЛ</span>
+  <div class="card"><div class="ct">Мэдээлэл Технологи / Програм Хангамж</div><div class="cs">Монгол улс · Тасралтгүй суралцдаг</div></div>
+</div></div>
+
+<script>
+// ---- Loading ----
+const msgs=['Дэлхийг ачааллаж байна...','Блокуудыг байрлуулж байна...','Кодыг шалгаж байна...','Туршлагыг бэлдэж байна...','Тоглогчдыг дуудаж байна...','Бэлэн боллоо!'];
+const bar=document.getElementById('lbar'),pct=document.getElementById('lpct'),lmsg=document.getElementById('lmsg');
+let p=0;
+const iv=setInterval(()=>{
+  p+=Math.random()*3.5+.8; if(p>100)p=100;
+  bar.style.width=p+'%'; pct.textContent=Math.floor(p)+'%';
+  lmsg.textContent=msgs[Math.min(Math.floor(p/18),5)];
+  if(p>=100){
+    clearInterval(iv);
+    setTimeout(()=>{
+      const L=document.getElementById('loading');
+      L.style.opacity='0';
+      setTimeout(()=>{
+        L.style.display='none';
+        const W=document.getElementById('world');
+        W.style.display='block';
+        requestAnimationFrame(()=>requestAnimationFrame(()=>{W.style.opacity='1';}));
+        startParticles();
+      },600);
+    },300);
+  }
+},55);
+
+// ---- Particles ----
+const pc=document.getElementById('particles');
+const types=['xp','xp','xp','sp','sp','st','st'];
+
+function spawnOrb(){
+  const el=document.createElement('div');
+  const t=types[Math.floor(Math.random()*types.length)];
+  el.className='orb '+t;
+  const dur=4+Math.random()*6;
+  const rise=120+Math.random()*180;
+  const sway=(Math.random()-.5)*80;
+  el.style.cssText=`
+    left:${Math.random()*100}%;
+    bottom:${10+Math.random()*50}%;
+    animation-duration:${dur}s;
+    animation-delay:${Math.random()*4}s;
+    --rise:-${rise}px;
+    --sway:${sway}px;
+  `;
+  pc.appendChild(el);
+  setTimeout(()=>el.remove(),(dur+4.1)*1000);
+}
+
+function startParticles(){
+  for(let i=0;i<20;i++) setTimeout(spawnOrb, i*200);
+  setInterval(spawnOrb,600);
+}
+
+// ---- Panels ----
+function openPanel(id){
+  document.getElementById('ov-'+id).classList.add('open');
+  if(id==='skills') setTimeout(()=>document.querySelectorAll('.xpf').forEach(el=>el.style.width=el.dataset.p+'%'),80);
+}
+function closePanel(id){
+  document.getElementById('ov-'+id).classList.remove('open');
+  if(id==='skills') document.querySelectorAll('.xpf').forEach(el=>el.style.width='0%');
+}
+document.querySelectorAll('.overlay').forEach(ov=>{
+  ov.addEventListener('click',e=>{if(e.target===ov)closePanel(ov.id.replace('ov-',''));});
+});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape') document.querySelectorAll('.overlay.open').forEach(ov=>closePanel(ov.id.replace('ov-','')));
+});
+</script>
+</body>
+</html>
